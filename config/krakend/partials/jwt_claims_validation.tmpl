@@ -1,0 +1,6 @@
+{
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }

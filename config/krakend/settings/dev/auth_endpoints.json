@@ -1,0 +1,123 @@
+{
+  "prefix": "auth",
+  "host": ["http://auth-service:3500"],
+  "versioning": false,
+  "verify_api_tokens": false,
+  "claims_propagation": true,
+  "endpoints": [
+    {
+      "path": "signup",
+      "method": "POST",
+      "router_headers": ["Content-Type", "Cookie", "Captcha-Id", "Captcha-Answer"],
+      "backend_headers": ["Content-Type", "Cookie", "Captcha-Id", "Captcha-Answer"]
+    },
+    {
+      "path": "sign",
+      "method": "POST"
+    },
+    {
+      "path": "terminate",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "logout",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "info",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "lost-password/send-email",
+      "method": "POST",
+      "router_headers": ["Content-Type", "Captcha-Id", "Captcha-Answer"],
+      "backend_headers": ["Content-Type", "Captcha-Id", "Captcha-Answer"]
+    },
+    {
+      "path": "lost-password/verify",
+      "method": "POST"
+    },
+    {
+      "path": "lost-password/change",
+      "method": "POST"
+    },
+    {
+      "path": "change-password",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "mfa",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "mfa",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "mfa/email/send-code",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "mfa/email/confirm",
+      "method": "POST"
+    },
+    {
+      "path": "mfa/email/cancel",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "mfa/email/verify",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "mfa/totp",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "mfa/totp/init",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "mfa/totp/confirm",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "api-tokens",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "api-tokens",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "api-tokens",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "auth/api-tokens/{tokenId}",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "auth/api-tokens/{tokenId}",
+      "method": "DELETE",
+      "auth": true
+    }
+  ]
+}

@@ -1,0 +1,60 @@
+services:
+  krakend_ce:
+    # The :watch image restarts the service automatically when the configuration files change.
+    # Do not use this image in production, it's meant to speed up your testing and development.
+    image: devopsfaith/krakend:watch
+    volumes:
+      - ./config/krakend:/etc/krakend
+      - ./plugins:/opt/krakend/plugins
+    networks:
+      - helizium-network
+    ports:
+      - "8080:8080"
+    command: ["run", "-d", "-c", "/etc/krakend/krakend.json"]
+    depends_on:
+      - jaeger
+  grafana:
+    image: grafana/grafana:latest
+    networks:
+      - helizium-network
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: helizium
+      GF_SECURITY_ADMIN_PASSWORD: helizium
+      GF_AUT_ANONYMOUS_ENABLED: "true"
+    volumes:
+      - "./config/grafana/datasources/all.yml:/etc/grafana/provisioning/datasources/all.yml"
+      - "./config/grafana/dashboards/all.yml:/etc/grafana/provisioning/dashboards/all.yml"
+      - "./config/grafana/krakend:/var/lib/grafana/dashboards/krakend"
+  prometheus:
+    image: prom/prometheus:latest
+    networks:
+      - helizium-network
+    ports:
+      - "9090:9090"
+    volumes:
+      - "./config/prometheus:/etc/prometheus"
+  jaeger:
+    image: jaegertracing/all-in-one:latest
+    networks:
+      - helizium-network
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+      - "4318:4318"
+  jwt-revoker:
+    container_name: jwt-revoker
+    build:
+      context: images/jwt-revoker
+    networks:
+      - helizium-network
+    ports:
+      - "9000:8080"
+    depends_on:
+      - krakend_ce
+    restart: always
+
+networks:
+  helizium-network:
+    external: true

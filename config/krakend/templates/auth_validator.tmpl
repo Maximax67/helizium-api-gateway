@@ -1,0 +1,16 @@
+"auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "{{ .host }}/{{ .jwks_path }}",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": {{ .disable_jwk_security }},
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        }

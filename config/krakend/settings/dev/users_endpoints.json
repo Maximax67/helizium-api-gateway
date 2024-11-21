@@ -1,0 +1,31 @@
+{
+  "prefix": "users",
+  "host": ["http://main-service:3501"],
+  "versioning": true,
+  "verify_api_tokens": true,
+  "claims_propagation": false,
+  "endpoints": [
+    {
+      "path": "me",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{userId}/permissions/global",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{userId}/permissions/global",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{userId}/permissions/global",
+      "method": "DELETE",
+      "auth": true
+    }
+  ]
+}

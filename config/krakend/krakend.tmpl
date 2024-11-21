@@ -1,0 +1,32 @@
+{
+  "$schema": "https://www.krakend.io/schema/v3.json",
+  "version": 3,
+  "name": "{{ .env.name }}",
+  "port": {{ .env.port }},
+  "timeout": "5s",
+  "cache_ttl": "300s",
+  "plugin": {
+    "pattern": ".so",
+    "folder": "/opt/krakend/plugins"
+  },
+  "endpoints": [
+    {{ template "endpoints.tmpl" . }}
+  ],
+  "extra_config": {
+    "plugin/http-server": {
+      "name": ["krakend-captcha"],
+      "krakend-captcha": {
+        "expire": 300,
+        "captcha-limit": 5000,
+        "string-show-hollow-line": true,
+        "string-show-slime-line": true,
+        "math-show-hollow-line": true,
+        "math-show-slime-line": true,
+        "math-noise-count": 10,
+        "digit-dot-count": 90,
+        "endpoints": {{ marshal .captcha_endpoints.endpoints }}
+      }
+    },
+    {{ include "extra_config.tmpl" }}
+  }
+}

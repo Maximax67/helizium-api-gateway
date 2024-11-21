@@ -1,0 +1,33 @@
+{
+  "prefix": "categories",
+  "host": ["http://main-service:3501"],
+  "versioning": true,
+  "verify_api_tokens": true,
+  "claims_propagation": false,
+  "endpoints": [
+    {
+      "path": "",
+      "method": "POST",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{categoryId}",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{categoryId}",
+      "method": "PUT",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{categoryId}",
+      "method": "DELETE",
+      "auth": true,
+      "api_tokens": true
+    }
+  ]
+}

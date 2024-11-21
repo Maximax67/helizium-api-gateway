@@ -1,0 +1,71 @@
+"router": {
+      "return_error_msg": true
+    },
+    "security/bot-detector": {
+      "empty_user_agent_is_bot": true,
+      "cache_size": 10000
+    },
+    "security/cors": {
+      "allow_origins": [
+        "*"
+      ],
+      "allow_methods": [
+        "POST",
+        "GET",
+        "DELETE",
+        "PUT",
+        "PATCH"
+      ],
+      "allow_headers": [
+        "Origin",
+        "Authorization",
+        "Content-Type",
+        "Cookie"
+      ],
+      "expose_headers": [
+        "Content-Length",
+        "Authorization",
+        "Cookie"
+      ],
+      "max_age": "0h"
+    },
+    "auth/revoker": {
+      "N": 10000000,
+      "P": 0.0000001,
+      "hash_name": "optimal",
+      "TTL": 1500,
+      "port": 1234,
+      "token_keys": ["jti"]
+    },
+    "auth/jwk-client": {
+      "shared_cache_duration": 900
+    },
+    "telemetry/logging": {
+      "level": "DEBUG",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true
+    },
+    "telemetry/opentelemetry": {
+      "service_name": "krakend",
+      "trace_sample_rate": 1,
+      "exporters": {
+        "prometheus": [
+          {
+            "name": "prometheus",
+            "port": 9091,
+            "process_metrics": true,
+            "go_metrics": true
+          }
+        ],
+        "otlp": [
+          {
+            "name": "jaeger",
+            "host": "jaeger",
+            "port": 4317,
+            "use_http": false,
+            "disable_metrics": true
+          }
+        ]
+      }
+    }

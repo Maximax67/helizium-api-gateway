@@ -1,0 +1,1996 @@
+{
+  "$schema": "https://www.krakend.io/schema/v3.json",
+  "version": 3,
+  "name": "Helizium API Gateway (DEV)",
+  "port": 8080,
+  "timeout": "5s",
+  "cache_ttl": "300s",
+  "plugin": {
+    "pattern": ".so",
+    "folder": "/opt/krakend/plugins"
+  },
+  "endpoints": [
+    {
+      "endpoint": "/",
+      "method": "GET",
+      "backend": [
+        {
+          "url_pattern": "/",
+          "method": "GET",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"],
+          "group": "auth"
+        },
+        {
+          "url_pattern": "/",
+          "method": "GET",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"],
+          "group": "main"
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/refresh",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/refresh",
+          "encoding": "no-op",
+          "method": "POST",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "refreshToken",
+          "cache": true,
+          "disable_jwk_security": true
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && has(JWT.exp) && JWT.type == 'REFRESH'"
+          }
+        ]
+      }
+    },
+    {
+      "endpoint": "/auth/signup",
+      "input_headers": ["Content-Type","Cookie","Captcha-Id","Captcha-Answer"],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/signup",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": ["Content-Type","Cookie","Captcha-Id","Captcha-Answer"],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/sign",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/sign",
+          "encoding": "no-op",
+          "method": "POST",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/terminate",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/terminate",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/logout",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/logout",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/info",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/info",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/lost-password/send-email",
+      "input_headers": ["Content-Type","Captcha-Id","Captcha-Answer"],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/lost-password/send-email",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": ["Content-Type","Captcha-Id","Captcha-Answer"],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/lost-password/verify",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/lost-password/verify",
+          "encoding": "no-op",
+          "method": "POST",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/lost-password/change",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/lost-password/change",
+          "encoding": "no-op",
+          "method": "POST",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/change-password",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/change-password",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa/email/send-code",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/email/send-code",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa/email/confirm",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/email/confirm",
+          "encoding": "no-op",
+          "method": "POST",
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ]
+    },
+    {
+      "endpoint": "/auth/mfa/email/cancel",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/email/cancel",
+          "encoding": "no-op",
+          "method": "DELETE",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa/email/verify",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/email/verify",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa/totp",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/totp",
+          "encoding": "no-op",
+          "method": "DELETE",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa/totp/init",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/totp/init",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/mfa/totp/confirm",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/mfa/totp/confirm",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/api-tokens",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/api-tokens",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/api-tokens",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/api-tokens",
+          "encoding": "no-op",
+          "method": "DELETE",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/api-tokens",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/api-tokens",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/auth/api-tokens/{tokenId}",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/auth/api-tokens/{tokenId}",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/auth/auth/api-tokens/{tokenId}",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/auth/api-tokens/{tokenId}",
+          "encoding": "no-op",
+          "method": "DELETE",
+          "input_headers": [
+            "Content-Type",
+            "Cookie",
+            "Authorization"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://auth-service:3500"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/users/me",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/users/me",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/users/{userId}/permissions/global",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/users/{userId}/permissions/global",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/users/{userId}/permissions/global",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/users/{userId}/permissions/global",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/users/{userId}/permissions/global",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/users/{userId}/permissions/global",
+          "encoding": "no-op",
+          "method": "DELETE",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type == 'ACCESS'"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/categories",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/categories",
+          "encoding": "no-op",
+          "method": "POST",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/categories/{categoryId}",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/categories/{categoryId}",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/categories/{categoryId}",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/categories/{categoryId}",
+          "encoding": "no-op",
+          "method": "PUT",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    },
+    {
+      "endpoint": "/v1/categories/{categoryId}",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "DELETE",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/categories/{categoryId}",
+          "encoding": "no-op",
+          "method": "DELETE",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 120,
+              "capacity": 50,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": true
+          }
+        }
+      }
+    }
+  ],
+  "extra_config": {
+    "plugin/http-server": {
+      "name": ["krakend-captcha"],
+      "krakend-captcha": {
+        "expire": 300,
+        "captcha-limit": 5000,
+        "string-show-hollow-line": true,
+        "string-show-slime-line": true,
+        "math-show-hollow-line": true,
+        "math-show-slime-line": true,
+        "math-noise-count": 10,
+        "digit-dot-count": 90,
+        "endpoints": [{"bypasses":2,"method":"POST","path":"/auth/signup","ttl":600},{"method":"GET","path":"/bla"}]
+      }
+    },
+    "router": {
+      "return_error_msg": true,
+      "logger_skip_paths": ["/captcha"]
+    },
+    "security/bot-detector": {
+      "empty_user_agent_is_bot": true,
+      "cache_size": 10000
+    },
+    "security/cors": {
+      "allow_origins": [
+        "*"
+      ],
+      "allow_methods": [
+        "POST",
+        "GET",
+        "DELETE",
+        "PUT",
+        "PATCH"
+      ],
+      "allow_headers": [
+        "Origin",
+        "Authorization",
+        "Content-Type",
+        "Cookie"
+      ],
+      "expose_headers": [
+        "Content-Length",
+        "Authorization",
+        "Cookie"
+      ],
+      "max_age": "0h"
+    },
+    "auth/revoker": {
+      "N": 10000000,
+      "P": 0.0000001,
+      "hash_name": "optimal",
+      "TTL": 1500,
+      "port": 1234,
+      "token_keys": ["jti"]
+    },
+    "auth/jwk-client": {
+      "shared_cache_duration": 900
+    },
+    "telemetry/logging": {
+      "level": "DEBUG",
+      "prefix": "[KRAKEND]",
+      "syslog": false,
+      "stdout": true
+    },
+    "telemetry/opentelemetry": {
+      "service_name": "krakend",
+      "trace_sample_rate": 1,
+      "exporters": {
+        "prometheus": [
+          {
+            "name": "prometheus",
+            "port": 9091,
+            "process_metrics": true,
+            "go_metrics": true
+          }
+        ],
+        "otlp": [
+          {
+            "name": "jaeger",
+            "host": "jaeger",
+            "port": 4317,
+            "use_http": false,
+            "disable_metrics": true
+          }
+        ]
+      }
+    }
+  }
+}

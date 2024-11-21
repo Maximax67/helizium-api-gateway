@@ -1,0 +1,217 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>KrakenD JWT Revoker</title>
+    <meta name="description" content="KrakenD JWT Revoker - Revoke JWT remotely">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 20px 40px;
+            background-color: #fff;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 50px;
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: #333;
+            text-align: center;
+        }
+        h2 {
+            font-size: 1.5rem;
+            margin-bottom: 40px;
+            color: #666;
+            text-align: center;
+        }
+        .row {
+            display: flex;
+            justify-content: space-around;
+        }
+        .column {
+            width: 45%;
+        }
+        h3 {
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            color: #444;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="text"] {
+            padding: 10px;
+            font-size: 1rem;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        input[type="button"] {
+            padding: 10px 15px;
+            font-size: 1rem;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        input[type="button"]:hover {
+            background-color: #0056b3;
+        }
+        .history {
+            margin-top: 50px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            font-size: 1rem;
+            padding: 12px;
+        }
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+        th {
+            padding: 12px;
+            background-color: #343a40;
+            color: white;
+            font-weight: bold;
+            text-align: center;
+        }
+        tbody tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        tbody tr:hover {
+            background-color: #f1f1f1;
+        }
+        tbody td {
+            padding: 12px;
+            text-align: center;
+        }
+        /* Status badge styles */
+        .badge {
+            padding: 5px 10px;
+            border-radius: 12px;
+            color: white;
+            font-size: 0.9rem;
+            text-align: center;
+            display: inline-block;
+        }
+        .badge-check {
+            background-color: #28a745;
+        }
+        .badge-add {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KrakenD JWT Revoker</h1>
+        <h2>Revoke JWT remotely</h2>
+        <div class="row">
+            <div class="column">
+                <h3>Add</h3>
+                <form id="addForm">
+                    <input type="text" id="addInput" placeholder="The JTI to revoke" required>
+                    <input type="button" value="Submit" onclick="addToBloomFilter()">
+                </form>
+            </div>
+            <div class="column">
+                <h3>Check</h3>
+                <form id="checkForm">
+                    <input type="text" id="checkInput" placeholder="The JTI to check" required>
+                    <input type="button" value="Submit" onclick="checkInBloomFilter()">
+                </form>
+            </div>
+        </div>
+
+        <div class="history">
+            <h3>Request History</h3>
+            <table id="historyTable">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>JTI</th>
+                        <th>Response</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic rows will be prepended here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function addToBloomFilter() {
+            const jti = document.getElementById('addInput').value.trim();
+            if (jti === "") {
+                alert("Please enter the JTI.");
+                return;
+            }
+
+            fetch('/add?jti=' + encodeURIComponent(jti), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
+            })
+            .then(response => {
+                if (response.ok) {
+                    addHistoryRow('Add', jti, '🆗');
+                } else {
+                    return response.text().then(text => addHistoryRow('Add', jti, text));
+                }
+            })
+            .catch(error => {
+                addHistoryRow('Add', jti, error.message);
+            });
+        }
+
+        function checkInBloomFilter() {
+            const jti = document.getElementById('checkInput').value.trim();
+            if (jti === "") {
+                alert("Please enter a valid JTI.");
+                return;
+            }
+
+            fetch('/check?jti=' + encodeURIComponent(jti), {
+                method: 'GET'
+            })
+            .then(response => response.text())
+            .then(result => {
+                addHistoryRow('Check', jti, result == 'true' ? '✔️' : '❌');
+            })
+            .catch(error => {
+                addHistoryRow('Check', jti, error.message);
+            });
+        }
+
+        function addHistoryRow(type, jti, response) {
+            const tableBody = document.querySelector('#historyTable tbody');
+            const newRow = document.createElement('tr');
+            const timestamp = new Date().toLocaleString();
+            const badgeClass = type === 'Check' ? 'badge-check' : 'badge-add';
+            const badge = `<span class="badge ${badgeClass}">${type}</span>`;
+
+            newRow.innerHTML = `<td>${badge}</td><td>${jti}</td><td>${response}</td><td>${timestamp}</td>`;
+            tableBody.prepend(newRow);
+        }
+    </script>
+</body>
+</html>

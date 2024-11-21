@@ -1,0 +1,14 @@
+{
+  "endpoints": [
+    {
+      "path": "/auth/signup",
+      "method": "POST",
+      "bypasses": 2,
+      "ttl": 600
+    },
+    {
+      "path": "/bla",
+      "method": "GET"
+    }
+  ]
+}

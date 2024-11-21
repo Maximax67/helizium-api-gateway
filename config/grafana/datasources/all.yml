@@ -1,0 +1,75 @@
+apiVersion: 1
+
+datasources:
+# OpenTelemetry
+- access: proxy
+  id: 3
+  orgId: 1
+  name: Loki
+  type: loki
+  typeName: Loki
+  url: http://loki:3100
+  user: ""
+  database: ""
+  basicAuth: false
+  isDefault: false
+  jsonData: {}
+  readOnly: false
+- access: proxy
+  id: 1
+  orgId: 1
+  name: Prometheus
+  type: prometheus
+  typeName: Prometheus
+  url: http://prometheus:9090
+  user: ""
+  database: ""
+  basicAuth: false
+  isDefault: true
+  jsonData:
+    httpMethod: POST
+  readOnly: false
+  uid: prometheus_ds
+- access: proxy
+  id: 2
+  orgId: 1
+  name: Tempo
+  type: tempo
+  typeName: Tempo
+  url: http://tempo:3200
+  user: ""
+  database: ""
+  basicAuth: false
+  isDefault: false
+  jsonData: {}
+  readOnly: false
+# InfluxDB v2.x
+-  access: 'proxy'
+   editable: true
+   isDefault: false
+   name: 'influx'
+   orgId: 1
+   type: 'influxdb'
+   url: 'http://influxdb:8086'
+   version: 1
+   database: krakend
+   basicAuth: false
+   jsonData:
+     defaultBucket: krakend
+     httpMode: POST
+     organization: my-org
+     version: Flux
+   secureJsonData:
+    token: $INFLUXDB_TOKEN
+# InfluxDB v1.x
+-  access: 'proxy'
+   editable: true
+   is_default: false
+   name: 'influxdb'
+   org_id: 1
+   type: 'influxdb'
+   url: 'http://influxdb:8086'
+   version: 1
+   user: krakend-dev
+   password: pas5w0rd
+   database: krakend

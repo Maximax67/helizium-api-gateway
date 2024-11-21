@@ -1,0 +1,122 @@
+{
+      "endpoint": "/",
+      "method": "GET",
+      "backend": [
+        {{- range $idx, $host_info := .env.hosts }}
+        {{- if $idx }},{{ end }}
+        {
+          "url_pattern": "/",
+          "method": "GET",
+          "extra_config": {
+            {{ include "rate_limit_backend.tmpl" }}
+          },
+          "host": ["{{ $host_info.host }}"],
+          "group": "{{ $host_info.title }}"
+        }
+        {{- end }}
+      ]
+    },
+    {
+      "endpoint": "/auth/refresh",
+      {{ include "input_headers.tmpl" }},
+      "method": "POST",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/auth/refresh",
+          "encoding": "no-op",
+          "method": "POST",
+          "extra_config": {
+            {{ include "rate_limit_backend.tmpl" }}
+          },
+          "host": ["{{ .env.auth.host }}"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "{{ .env.auth.host }}/{{ .env.auth.jwks_path }}",
+          "cookie_key": "refreshToken",
+          "cache": true,
+          "disable_jwk_security": {{ .env.auth.disable_jwk_security }}
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && has(JWT.exp) && JWT.type == 'REFRESH'"
+          }
+        ]
+      }
+    },
+{{- $modules := list .auth_endpoints .users_endpoints .category_endpoints -}}
+{{- range $idx, $module := $modules -}}
+	{{ if $idx }},{{ end -}}
+{{- range $idx2, $endpoint := $module.endpoints -}}
+  {{ if $idx2 }},{{ end }}
+  {{- $versions := list "" }}
+  {{- if $module.versioning }}
+    {{- $versions = list "v1" }}
+  {{- end }}
+  {{- if $endpoint.versions -}}
+    {{- $versions = $endpoint.versions }}
+  {{- end }}
+  {{- range $idx3, $version := $versions -}}
+    {{ if $idx3 }},{{ end }}
+    {
+      "endpoint": "{{ if $version }}/{{ $version }}{{ end }}{{ if $module.prefix }}/{{ $module.prefix }}{{ end }}{{ if $endpoint.path }}/{{ $endpoint.path }}{{ end }}",
+      {{- if $endpoint.router_headers }}
+      "input_headers": {{ marshal $endpoint.router_headers }}
+      {{- else }}
+      {{- if $endpoint.auth }}
+      {{ include "input_headers_jwt_router.tmpl" }}
+      {{- else }}
+      {{ include "input_headers.tmpl" }}
+      {{- end }}
+      {{- end }},
+      "method": "{{ $endpoint.method }}",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "{{ if $version }}/{{ $version }}{{ end }}{{ if $module.prefix }}/{{ $module.prefix }}{{ end }}{{ if $endpoint.path }}/{{ $endpoint.path }}{{ end }}",
+          "encoding": "no-op",
+          "method": "{{ $endpoint.method }}",
+          {{- if $endpoint.backend_headers }}
+          "input_headers": {{ marshal $endpoint.backend_headers }},
+          {{- else }}
+          {{- if $endpoint.auth }}
+          {{- if $module.claims_propagation }}
+          {{ include "input_headers_backend.tmpl" }},
+          {{- else }}
+          {{ include "input_headers_jwt_backend.tmpl" }},
+          {{- end }}
+          {{- end }}
+          {{- end }}
+          "extra_config": {
+            {{ include "rate_limit_backend.tmpl" }}
+          },
+          "host": {{ marshal $module.host }}
+        }
+      ]
+    {{- if $endpoint.auth -}}
+      ,
+      "extra_config": {
+        {{ template "auth_validator.tmpl" $.env.auth -}},
+        "validation/cel": [
+          {{- if $endpoint.api_tokens }}
+          {{ include "jwt_claims_validation.tmpl" }}
+          {{- else }}
+          {{ include "jwt_access_claims_validation.tmpl" }}
+          {{- end }}
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "{{ $.env.auth.host }}/{{ $.env.auth.api_tokens_validator_path }}",
+            "verify-api-tokens": {{ if $module.verify_api_tokens }}true{{ else }}false{{ end }}
+          }
+        }
+      }
+    {{- end }}
+    }
+  {{- end -}}
+{{- end -}}
+{{- end -}}
