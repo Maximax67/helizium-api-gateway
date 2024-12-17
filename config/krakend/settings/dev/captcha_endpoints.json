@@ -2,13 +2,17 @@
   "endpoints": [
     {
       "path": "/auth/signup",
+      "method": "POST"
+    },
+    {
+      "path": "/auth/sign",
       "method": "POST",
-      "bypasses": 2,
+      "bypasses": 1,
       "ttl": 600
     },
     {
-      "path": "/bla",
-      "method": "GET"
+      "path": "/auth/lost-password/send-email",
+      "method": "POST"
     }
   ]
 }

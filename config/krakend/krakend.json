@@ -1917,12 +1917,12 @@
         "math-show-slime-line": true,
         "math-noise-count": 10,
         "digit-dot-count": 90,
-        "endpoints": [{"bypasses":2,"method":"POST","path":"/auth/signup","ttl":600},{"method":"GET","path":"/bla"}]
+        "endpoints": [{"method":"POST","path":"/auth/signup"},{"bypasses":1,"method":"POST","path":"/auth/sign","ttl":600},{"method":"POST","path":"/auth/lost-password/send-email"}]
       }
     },
     "router": {
       "return_error_msg": true,
-      "logger_skip_paths": ["/captcha"]
+      "auto_options": true
     },
     "security/bot-detector": {
       "empty_user_agent_is_bot": true,
