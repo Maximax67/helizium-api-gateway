@@ -11,6 +11,12 @@
       "auth": true
     },
     {
+      "path": "stream",
+      "method": "GET",
+      "auth": true,
+      "sse": true
+    },
+    {
       "path": "{contactId}",
       "method": "GET",
       "auth": true
