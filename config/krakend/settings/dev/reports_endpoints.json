@@ -1,0 +1,19 @@
+{
+  "prefix": "reports",
+  "host": ["http://main-service:3501"],
+  "versioning": true,
+  "verify_api_tokens": false,
+  "claims_propagation": false,
+  "endpoints": [
+    {
+      "path": "",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "{reportId}/status",
+      "method": "PUT",
+      "auth": true
+    }
+  ]
+}

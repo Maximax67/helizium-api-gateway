@@ -1,0 +1,24 @@
+{
+  "prefix": "users",
+  "host": ["http://auth-service:3500"],
+  "versioning": true,
+  "verify_api_tokens": false,
+  "claims_propagation": true,
+  "endpoints": [
+    {
+      "path": "{userId}/ban",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{userId}/unban",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{userId}/delete",
+      "method": "POST",
+      "auth": true
+    }
+  ]
+}

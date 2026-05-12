@@ -1,0 +1,100 @@
+{
+  "prefix": "tasks",
+  "host": ["http://main-service:3501"],
+  "versioning": true,
+  "verify_api_tokens": true,
+  "claims_propagation": false,
+  "endpoints": [
+    {
+      "path": "",
+      "method": "GET",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "",
+      "method": "POST",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{id}",
+      "method": "GET",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "{id}",
+      "method": "PUT",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{id}",
+      "method": "DELETE",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{id}/apply",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/reject/{applicantId}",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/approve/{applicantId}",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/submit-work",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/complete",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/reject-work",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/discard-freelancer",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{id}/rate",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{taskId}/comments",
+      "method": "GET",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "{taskId}/comments",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{taskId}/comments/{commentId}",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "{taskId}/reports",
+      "method": "POST",
+      "auth": true
+    }
+  ]
+}

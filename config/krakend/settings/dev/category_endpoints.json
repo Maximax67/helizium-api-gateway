@@ -7,6 +7,12 @@
   "endpoints": [
     {
       "path": "",
+      "method": "GET",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "",
       "method": "POST",
       "auth": true,
       "api_tokens": true
@@ -14,8 +20,8 @@
     {
       "path": "{categoryId}",
       "method": "GET",
-      "auth": true,
-      "api_tokens": true
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
     },
     {
       "path": "{categoryId}",
@@ -26,6 +32,36 @@
     {
       "path": "{categoryId}",
       "method": "DELETE",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{categoryId}/info",
+      "method": "GET",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "{categoryId}/permissions",
+      "method": "GET",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "{categoryId}/pin",
+      "method": "PUT",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{categoryId}/unpin",
+      "method": "PUT",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{categoryId}/restore",
+      "method": "POST",
       "auth": true,
       "api_tokens": true
     }

@@ -1,5 +1,5 @@
 {
-  "prefix": "users",
+  "prefix": "u",
   "host": ["http://main-service:3501"],
   "versioning": true,
   "verify_api_tokens": true,
@@ -12,18 +12,55 @@
       "api_tokens": true
     },
     {
-      "path": "{userId}/permissions/global",
+      "path": "me/bio",
+      "method": "PUT",
+      "auth": true
+    },
+    {
+      "path": "me/location",
+      "method": "PUT",
+      "auth": true
+    },
+    {
+      "path": "me/industry",
+      "method": "PUT",
+      "auth": true
+    },
+    {
+      "path": "{userId}/public",
+      "method": "GET",
+      "router_headers": ["Content-Type"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
+      "path": "{userId}/p/g",
       "method": "GET",
       "auth": true,
       "api_tokens": true
     },
     {
-      "path": "{userId}/permissions/global",
+      "path": "{userId}/p/g",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{userId}/permissions/global",
+      "path": "{userId}/p/g",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "{userId}/p/c/{categoryId}",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{userId}/p/c/{categoryId}",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{userId}/p/c/{categoryId}",
       "method": "DELETE",
       "auth": true
     }

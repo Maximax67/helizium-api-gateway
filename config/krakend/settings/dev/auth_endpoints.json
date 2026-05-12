@@ -6,19 +6,38 @@
   "claims_propagation": true,
   "endpoints": [
     {
+      "path": "jwks",
+      "method": "GET",
+      "router_headers": ["Content-Type"],
+      "backend_headers": ["Content-Type"]
+    },
+    {
       "path": "signup",
       "method": "POST",
-      "router_headers": ["Content-Type", "Cookie", "Captcha-Id", "Captcha-Answer"],
-      "backend_headers": ["Content-Type", "Cookie", "Captcha-Id", "Captcha-Answer"]
+      "router_headers": [
+        "Content-Type",
+        "Cookie",
+        "Captcha-Id",
+        "Captcha-Answer"
+      ],
+      "backend_headers": [
+        "Content-Type",
+        "Cookie",
+        "Captcha-Id",
+        "Captcha-Answer"
+      ]
     },
     {
       "path": "sign",
-      "method": "POST"
+      "method": "POST",
+      "router_headers": ["Content-Type", "Captcha-Id", "Captcha-Answer"],
+      "backend_headers": ["Content-Type", "Captcha-Id", "Captcha-Answer"]
     },
     {
-      "path": "terminate",
-      "method": "POST",
-      "auth": true
+      "path": "info",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
     },
     {
       "path": "logout",
@@ -26,10 +45,9 @@
       "auth": true
     },
     {
-      "path": "info",
-      "method": "GET",
-      "auth": true,
-      "api_tokens": true
+      "path": "terminate",
+      "method": "POST",
+      "auth": true
     },
     {
       "path": "lost-password/send-email",
@@ -39,11 +57,15 @@
     },
     {
       "path": "lost-password/verify",
-      "method": "POST"
+      "method": "POST",
+      "router_headers": ["Content-Type"],
+      "backend_headers": ["Content-Type"]
     },
     {
       "path": "lost-password/change",
-      "method": "POST"
+      "method": "POST",
+      "router_headers": ["Content-Type"],
+      "backend_headers": ["Content-Type"]
     },
     {
       "path": "change-password",
@@ -67,7 +89,9 @@
     },
     {
       "path": "mfa/email/confirm",
-      "method": "POST"
+      "method": "POST",
+      "router_headers": ["Content-Type", "Cookie", "Authorization"],
+      "backend_headers": ["Content-Type", "Cookie", "Authorization"]
     },
     {
       "path": "mfa/email/cancel",
@@ -95,13 +119,14 @@
       "auth": true
     },
     {
-      "path": "api-tokens",
-      "method": "GET",
-      "auth": true
+      "path": "api-tokens/validate",
+      "method": "POST",
+      "router_headers": ["Content-Type"],
+      "backend_headers": ["Content-Type"]
     },
     {
       "path": "api-tokens",
-      "method": "DELETE",
+      "method": "GET",
       "auth": true
     },
     {
@@ -110,12 +135,17 @@
       "auth": true
     },
     {
-      "path": "auth/api-tokens/{tokenId}",
+      "path": "api-tokens",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "api-tokens/{jti}",
       "method": "GET",
       "auth": true
     },
     {
-      "path": "auth/api-tokens/{tokenId}",
+      "path": "api-tokens/{jti}",
       "method": "DELETE",
       "auth": true
     }

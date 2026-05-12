@@ -1,0 +1,29 @@
+{
+  "prefix": "chat",
+  "host": ["http://main-service:3501"],
+  "versioning": true,
+  "verify_api_tokens": false,
+  "claims_propagation": false,
+  "endpoints": [
+    {
+      "path": "",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "{contactId}",
+      "method": "GET",
+      "auth": true
+    },
+    {
+      "path": "{contactId}",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{contactId}/read",
+      "method": "PUT",
+      "auth": true
+    }
+  ]
+}
