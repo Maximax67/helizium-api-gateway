@@ -1,0 +1,41 @@
+{
+  "prefix": "u",
+  "host": ["http://main-service:3501"],
+  "versioning": true,
+  "verify_api_tokens": true,
+  "claims_propagation": false,
+  "endpoints": [
+    {
+      "path": "{userId}/p/g",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{userId}/p/g",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{userId}/p/g",
+      "method": "DELETE",
+      "auth": true
+    },
+    {
+      "path": "{userId}/p/c/{categoryId}",
+      "method": "GET",
+      "auth": true,
+      "api_tokens": true
+    },
+    {
+      "path": "{userId}/p/c/{categoryId}",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{userId}/p/c/{categoryId}",
+      "method": "DELETE",
+      "auth": true
+    }
+  ]
+}

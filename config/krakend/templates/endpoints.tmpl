@@ -47,7 +47,7 @@
         ]
       }
     },
-{{- $modules := list .auth_endpoints .auth_users_endpoints .users_endpoints .category_endpoints .tasks_endpoints .reports_endpoints .chat_endpoints -}}
+{{- $modules := list .auth_endpoints .auth_users_endpoints .users_endpoints .users_permissions_endpoints .category_endpoints .tasks_endpoints .reports_endpoints .chat_endpoints -}}
 {{- range $idx, $module := $modules -}}
 	{{ if $idx }},{{ end -}}
 {{- range $idx2, $endpoint := $module.endpoints -}}
