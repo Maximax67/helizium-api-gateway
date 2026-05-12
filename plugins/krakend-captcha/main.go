@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"image/color"
+	"net"
 	"net/http"
 	"strings"
 	"time"
@@ -402,7 +403,7 @@ func (r registerer) registerHandlers(_ context.Context, extra map[string]interfa
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, req *http.Request) {
-		userIp := req.RemoteAddr
+		userIp := getClientIP(req)
 		reqPath := req.URL.Path
 		reqMethod := req.Method
 
@@ -530,6 +531,12 @@ func (r registerer) registerHandlers(_ context.Context, extra map[string]interfa
 			hash := shortHash(combined)
 			storeKey := hash + id
 
+			if logger != nil {
+				logger.Debug(fmt.Sprintf("[PLUGIN: %s] Combined %s", HandlerRegisterer, combined))
+				logger.Debug(fmt.Sprintf("[PLUGIN: %s] Store key %s", HandlerRegisterer, storeKey))
+				logger.Debug(fmt.Sprintf("[PLUGIN: %s] Answer %s", HandlerRegisterer, answer))
+			}
+
 			c.Store.Set(storeKey, answer)
 
 			responseData := map[string]string{
@@ -548,6 +555,8 @@ func (r registerer) registerHandlers(_ context.Context, extra map[string]interfa
 				return
 			}
 
+			w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3002")
+			w.Header().Set("Access-Control-Allow-Credentials", "true")
 			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusOK)
 			w.Write(jsonData)
@@ -636,6 +645,12 @@ func (r registerer) registerHandlers(_ context.Context, extra map[string]interfa
 		hash := shortHash(cacheKey)
 		storeKey := hash + captchaId
 
+		if logger != nil {
+			logger.Debug(fmt.Sprintf("[PLUGIN: %s] Combined %s", HandlerRegisterer, cacheKey))
+			logger.Debug(fmt.Sprintf("[PLUGIN: %s] Store key %s", HandlerRegisterer, storeKey))
+			logger.Debug(fmt.Sprintf("[PLUGIN: %s] Value %s", HandlerRegisterer, strings.ToLower(captchaValue)))
+		}
+
 		if !store.Verify(storeKey, strings.ToLower(captchaValue), true) {
 			if logger != nil {
 				logger.Debug(fmt.Sprintf("[PLUGIN: %s] Request rejected: invalid or expired captcha", HandlerRegisterer))
@@ -679,8 +694,28 @@ func getError(errorType, message string, statusCode int) HTTPResponse {
 // Helper function to write the error response
 func writeErrorResponse(w http.ResponseWriter, httpError HTTPResponse) {
 	w.Header().Set("Content-Type", httpError.HTTPEncoding)
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3002")
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
+    w.Header().Set("Access-Control-Allow-Headers", "Content-Type, X-Captcha-Id, X-Captcha-Value")
+    w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 	w.WriteHeader(httpError.Code)
 	w.Write([]byte(httpError.Msg))
+}
+
+func getClientIP(req *http.Request) string {
+	// Check if a proxy sent the real IP
+	if ip := req.Header.Get("X-Forwarded-For"); ip != "" {
+		// X-Forwarded-For can be a list; the first one is the client
+		parts := strings.Split(ip, ",")
+		return strings.TrimSpace(parts[0])
+	}
+	if ip := req.Header.Get("X-Real-IP"); ip != "" {
+		return ip
+	}
+
+	// Fallback to RemoteAddr but strip the port
+	host, _, _ := net.SplitHostPort(req.RemoteAddr)
+	return host
 }
 
 // Helper function to get a specific header from the request

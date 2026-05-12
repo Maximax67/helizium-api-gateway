@@ -4230,8 +4230,9 @@
     },
     "security/cors": {
       "allow_origins": [
-        "*"
+        "http://localhost:3002"
       ],
+      "allow_credentials": true,
       "allow_methods": [
         "POST",
         "GET",
@@ -4243,7 +4244,9 @@
         "Origin",
         "Authorization",
         "Content-Type",
-        "Cookie"
+        "Cookie",
+        "X-Captcha-Id",
+        "X-Captcha-Value"
       ],
       "expose_headers": [
         "Content-Length",
