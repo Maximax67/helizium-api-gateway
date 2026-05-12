@@ -1,6 +1,6 @@
 module krakend-captcha
 
-go 1.22.9
+go 1.25.3
 
 require github.com/mojocn/base64Captcha v1.3.6
 

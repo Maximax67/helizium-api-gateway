@@ -1,6 +1,6 @@
 module jwt-revoker
 
-go 1.23
+go 1.25.3
 
 require github.com/krakendio/bloomfilter/v2 v2.0.4
 

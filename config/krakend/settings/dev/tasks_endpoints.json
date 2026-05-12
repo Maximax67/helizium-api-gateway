@@ -18,60 +18,60 @@
       "api_tokens": true
     },
     {
-      "path": "{id}",
+      "path": "{taskId}",
       "method": "GET",
       "router_headers": ["Content-Type", "Cookie", "Authorization"],
       "backend_headers": ["Content-Type"]
     },
     {
-      "path": "{id}",
+      "path": "{taskId}",
       "method": "PUT",
       "auth": true,
       "api_tokens": true
     },
     {
-      "path": "{id}",
+      "path": "{taskId}",
       "method": "DELETE",
       "auth": true,
       "api_tokens": true
     },
     {
-      "path": "{id}/apply",
+      "path": "{taskId}/apply",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/reject/{applicantId}",
+      "path": "{taskId}/reject/{applicantId}",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/approve/{applicantId}",
+      "path": "{taskId}/approve/{applicantId}",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/submit-work",
+      "path": "{taskId}/submit-work",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/complete",
+      "path": "{taskId}/complete",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/reject-work",
+      "path": "{taskId}/reject-work",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/discard-freelancer",
+      "path": "{taskId}/discard-freelancer",
       "method": "POST",
       "auth": true
     },
     {
-      "path": "{id}/rate",
+      "path": "{taskId}/rate",
       "method": "POST",
       "auth": true
     },

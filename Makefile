@@ -17,7 +17,7 @@ compile-flexible-config:
         -e FC_PARTIALS=/etc/krakend/partials \
         -e FC_TEMPLATES=/etc/krakend/templates \
         -e FC_OUT=/etc/krakend/krakend.json \
-        devopsfaith/krakend \
+        krakend \
         check -c krakend.tmpl
 
 build-plugins:
