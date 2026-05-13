@@ -71,6 +71,16 @@
       "auth": true
     },
     {
+      "path": "{taskId}/raise-dispute",
+      "method": "POST",
+      "auth": true
+    },
+    {
+      "path": "{taskId}/resolve-dispute",
+      "method": "POST",
+      "auth": true
+    },
+    {
       "path": "{taskId}/rate",
       "method": "POST",
       "auth": true

@@ -34,7 +34,7 @@ services:
     volumes:
       - "./config/prometheus:/etc/prometheus"
   jaeger:
-    image: jaegertracing/all-in-one:latest
+    image: jaegertracing/jaeger:latest
     networks:
       - helizium-network
     ports:

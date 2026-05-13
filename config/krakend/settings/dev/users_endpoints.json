@@ -27,6 +27,11 @@
       "auth": true
     },
     {
+      "path": "me/eth-address",
+      "method": "PUT",
+      "auth": true
+    },
+    {
       "path": "{userId}/public",
       "method": "GET",
       "router_headers": ["Content-Type"],
