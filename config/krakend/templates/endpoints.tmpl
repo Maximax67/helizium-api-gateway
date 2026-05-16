@@ -72,6 +72,9 @@
       {{ include "input_headers.tmpl" }}
       {{- end }}
       {{- end }},
+      {{- if $endpoint.input_query_strings }}
+      "input_query_strings": {{ marshal $endpoint.input_query_strings }},
+      {{- end }}
       "method": "{{ $endpoint.method }}",
       "output_encoding": "no-op",
       "backend": [

@@ -2351,6 +2351,7 @@
     {
       "endpoint": "/v1/categories",
       "input_headers": ["Content-Type","Cookie","Authorization"],
+      "input_query_strings": ["page","limit","categoryId","search","minPrice","maxPrice","fromDate","toDate","sortBy","sortDir","authorId","performerId","status"],
       "method": "GET",
       "output_encoding": "no-op",
       "backend": [

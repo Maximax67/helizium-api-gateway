@@ -8,6 +8,21 @@
     {
       "path": "",
       "method": "GET",
+      "input_query_strings": [
+        "page",
+        "limit",
+        "categoryId",
+        "search",
+        "minPrice",
+        "maxPrice",
+        "fromDate",
+        "toDate",
+        "sortBy",
+        "sortDir",
+        "authorId",
+        "performerId",
+        "status"
+      ],
       "router_headers": ["Content-Type", "Cookie", "Authorization"],
       "backend_headers": ["Content-Type"]
     },
