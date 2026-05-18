@@ -2950,6 +2950,76 @@
       }
     },
     {
+      "endpoint": "/v1/tasks/my-stats",
+      "input_headers": [
+        "Content-Type",
+        "Cookie",
+        "Authorization",
+        "x-user",
+        "x-token-limits",
+        "x-token-type",
+        "x-token-jti",
+        "x-token-iat",
+        "x-token-exp"
+      ],
+      "method": "GET",
+      "output_encoding": "no-op",
+      "backend": [
+        {
+          "url_pattern": "/v1/tasks/my-stats",
+          "encoding": "no-op",
+          "method": "GET",
+          "input_headers": [
+            "Content-Type",
+            "x-user",
+            "x-token-limits",
+            "x-token-type"
+          ],
+          "extra_config": {
+            "qos/ratelimit/proxy": {
+              "max_rate": 60,
+              "capacity": 20,
+              "every": "1m"
+            }
+          },
+          "host": ["http://main-service:3501"]
+        }
+      ],
+      "extra_config": {
+        "auth/validator": {
+          "alg": "RS256",
+          "jwk_url": "http://auth-service:3500/auth/jwks",
+          "cookie_key": "accessToken",
+          "cache": true,
+          "cache_duration": 3600,
+          "disable_jwk_security": true,
+          "propagate_claims": [
+            ["userId", "x-user"],
+            ["limits", "x-token-limits"],
+            ["type", "x-token-type"],
+            ["jti", "x-token-jti"],
+            ["iat", "x-token-iat"],
+            ["exp", "x-token-exp"]
+          ]
+        },
+        "validation/cel": [
+          {
+            "check_expr": "has(JWT.userId) && has(JWT.limits) && has(JWT.iat) && JWT.type in ['ACCESS', 'API']"
+          },
+          {
+            "check_expr": "(JWT.type == 'ACCESS' && has(JWT.exp)) || JWT.limits in ['READ_ONLY', 'DEFAULT']"
+          }
+        ],
+        "plugin/req-resp-modifier": {
+          "name": ["krakend-tokens-validation"],
+          "krakend-tokens-validation": {
+            "api-tokens-validator-url": "http://auth-service:3500/auth/api-tokens/validate",
+            "verify-api-tokens": false
+          }
+        }
+      }
+    },
+    {
       "endpoint": "/v1/tasks/{taskId}",
       "input_headers": ["Content-Type","Cookie","Authorization"],
       "method": "GET",
