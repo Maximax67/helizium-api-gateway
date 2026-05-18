@@ -27,6 +27,11 @@
       "backend_headers": ["Content-Type"]
     },
     {
+      "path": "my-stats",
+      "method": "GET",
+      "auth": true
+    },
+    {
       "path": "",
       "method": "POST",
       "auth": true,
